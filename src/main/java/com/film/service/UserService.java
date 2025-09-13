@@ -42,6 +42,10 @@ public class UserService {
   public UserResponse getUserById(Long id) {
     User user = userRepository.findById(id)
         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-    return UserResponse.builder().username(user.getUsername()).role(user.getRole()).build();
+    return UserResponse
+        .builder()
+        .username(user.getUsername())
+        .role(user.getRole())
+        .build();
   }
 }

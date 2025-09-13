@@ -1,5 +1,8 @@
 package com.film.Entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,4 +29,7 @@ public class User {
   @Column(nullable = false)
   @Enumerated(EnumType.STRING)
   private Role role;
+
+  @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Film> films = new ArrayList<>();
 }
