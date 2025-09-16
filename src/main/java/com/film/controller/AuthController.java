@@ -2,20 +2,21 @@ package com.film.controller;
 
 import org.springframework.web.bind.annotation.RestController;
 
-import com.film.Entity.User;
-import com.film.Repository.UserRepository;
 import com.film.model.JwtResponse;
+import com.film.model.LoginResponse;
 import com.film.model.LoginUserRequest;
 import com.film.model.RegisterUserRequest;
 import com.film.model.WebResponse;
 import com.film.security.JwtUtil;
 import com.film.service.AuthService;
 
-import org.springframework.http.HttpStatus;
+import java.time.Duration;
+
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -45,9 +46,45 @@ public class AuthController {
   }
 
   @PostMapping(path = "/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-  public WebResponse<JwtResponse> login(@RequestBody LoginUserRequest request) {
-    JwtResponse response = authService.login(request);
-    return WebResponse.<JwtResponse>builder().data(response).build();
+  public ResponseEntity<WebResponse<LoginResponse>> login(@RequestBody LoginUserRequest request) {
+    JwtResponse jwtResponse = authService.login(request);
+
+    ResponseCookie jwtCookie = ResponseCookie.from("jwt", jwtResponse.getToken())
+        .httpOnly(true)
+        .secure(true)
+        .path("/")
+        .maxAge(Duration.ofSeconds(60))
+        .sameSite("None")
+        .build();
+
+    LoginResponse response = LoginResponse.builder()
+        .username(jwtResponse.getUsername())
+        .role(jwtResponse.getRole())
+        .build();
+
+    WebResponse<LoginResponse> webResponse = WebResponse.<LoginResponse>builder().data(response).build();
+
+    return ResponseEntity
+        .ok()
+        .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
+        .body(webResponse);
+  }
+
+  @PostMapping("/logout")
+  public ResponseEntity<WebResponse<String>> logout() {
+    ResponseCookie response = ResponseCookie.from("jwt", "")
+        .httpOnly(true)
+        .secure(false)
+        .path("/")
+        .maxAge(0)
+        .build();
+
+    WebResponse<String> webResponse = WebResponse.<String>builder().data("OK").build();
+
+    return ResponseEntity
+        .ok()
+        .header(HttpHeaders.SET_COOKIE, response.toString())
+        .body(webResponse);
   }
 
   @GetMapping
