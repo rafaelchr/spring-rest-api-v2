@@ -14,6 +14,7 @@ public class DataInitializer {
   @Bean
   public CommandLineRunner initAdmin(UserRepository userRepository, PasswordEncoder passwordEncoder) {
     return args -> {
+
       if (userRepository.findByUsername("admin").isEmpty()) {
         User admin = new User();
         admin.setUsername("admin");
@@ -22,6 +23,18 @@ public class DataInitializer {
 
         userRepository.save(admin);
         System.out.println("Admin account created: username=admin, password=admin");
+      }
+
+      if (userRepository.findByUsername("user1").isEmpty()) {
+        for (int i = 1; i <= 100; i++) {
+          User user = new User();
+          String username = "user" + i;
+          user.setUsername(username);
+          user.setPassword(passwordEncoder.encode(username));
+          user.setRole(Role.USER);
+          userRepository.save(user);
+        }
+        System.out.println("100 dummy user accounts created (user1 to user100)");
       }
     };
   }
